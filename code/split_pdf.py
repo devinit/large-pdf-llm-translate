@@ -13,6 +13,7 @@ def split_pdf(input_pdf_path, output_dir, pages_per_split=10):
         total_pages = len(reader.pages)
 
         # Loop through and create new PDFs for each 10-page segment
+        index = 0
         for start_page in range(0, total_pages, pages_per_split):
             writer = PdfWriter()
             end_page = min(start_page + pages_per_split, total_pages)
@@ -22,10 +23,11 @@ def split_pdf(input_pdf_path, output_dir, pages_per_split=10):
                 writer.add_page(reader.pages[page_num])
 
             # Save the new PDF
-            output_pdf_path = os.path.join(output_dir, f'output_{start_page + 1}_to_{end_page}.pdf')
+            output_pdf_path = os.path.join(output_dir, f'output_{str(index).zfill(3)}.pdf')
             with open(output_pdf_path, 'wb') as output_pdf_file:
                 writer.write(output_pdf_file)
 
+            index += 1
             print(f'Saved: {output_pdf_path}')
 
 if __name__ == '__main__':

@@ -37,7 +37,7 @@ MODEL_DICT = {
         'token_input_cost': 0.15,
         'token_output_cost': 0.60,
         'token_cost_per': 1000000,
-        'sleep_time': 60,
+        'sleep_time': 5,
     },
 }
 
@@ -69,27 +69,41 @@ def translate_pdfs(input_folder, output_file):
         os.makedirs(output_folder)
 
     # Iterate through all PDF files in the input folder
-    for filename in tqdm(os.listdir(input_folder)):
+    input_files = os.listdir(input_folder)
+    input_files.sort()
+    for filename in tqdm(input_files):
         if filename.endswith(".pdf"):
-            pdf_path = os.path.join(input_folder, filename)
-            
-            # Read the PDF content
-            full_text = pdf_full_text(pdf_path)
+            pdf_basename = os.path.basename(filename)
+            pdf_basename_sans_ext, _ = os.path.splitext(pdf_basename)
+            txt_basename = "{}.txt".format(pdf_basename_sans_ext)
+            txt_path = os.path.join(output_folder, txt_basename)
 
-            messages = [
-                {"role": "system", "content": system_prompt},
-                {
-                    "role": "user",
-                    "content": full_text
-                }
-            ]
-            response = CLIENT.chat.completions.create(
-                model=model_attributes['api_name'],
-                messages=messages
-            )
-            translation = response.choices[0].message.content
+            if os.path.exists(txt_path):
+                with open(txt_path, 'r') as txt_file:
+                    translation = txt_file.read()
+            else:
+                pdf_path = os.path.join(input_folder, filename)
+
+                # Read the PDF content
+                full_text = pdf_full_text(pdf_path)
+
+                messages = [
+                    {"role": "system", "content": system_prompt},
+                    {
+                        "role": "user",
+                        "content": full_text
+                    }
+                ]
+                response = CLIENT.chat.completions.create(
+                    model=model_attributes['api_name'],
+                    messages=messages
+                )
+                translation = response.choices[0].message.content
+                with open(txt_path, 'w', encoding='utf-8') as output:
+                    output.write(translation)
+                time.sleep(model_attributes['sleep_time'])
+
             all_translations.append(translation)
-            time.sleep(model_attributes['sleep_time'])
 
     # Concatenate all translations and save to the output file
     with open(output_file, 'w', encoding='utf-8') as output:
