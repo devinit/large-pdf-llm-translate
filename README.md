@@ -15,5 +15,5 @@ pip install -r requirements.txt
 rm -rf pdfs_tmp
 rm -rf output
 python3 code/split_pdf.py pdfs/240607021743.pdf
-python3 translate_pdfs.py
+python3 code/translate_pdfs.py
 ```
